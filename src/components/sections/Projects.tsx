@@ -1,213 +1,106 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { FiActivity, FiBriefcase, FiExternalLink, FiHome, FiLayers, FiPlus, FiShoppingBag, FiX } from "react-icons/fi";
+import { categories, completedProjects, projects, type Project } from "@/portfolio";
 
-const projects = [
-  {
-    title: "N-Stride Shopify Store",
-    description:
-      "Full-fledged custom Shopify store with optimized UX, SEO, and performance enhancements with complete e-commerce functionality.",
-    image: "/images/web2.png",
-    link: "https://nstride.in",
-    tags: ["Shopify", "Liquid", "SEO", "Performance"],
-  },
-  {
-    title: "Legacy Yards",
-    description:
-      "Real estate platform with listings, filters, advanced search, and lead capture workflows.",
-    image: "/images/web1.png",
-    link: "https://legacyyards.homes",
-    tags: ["Next.js", "Node.js", "MongoDB", "SSR"],
-  },
-  {
-    title: "Antharanga Hospital",
-    description:
-      "Modern hospital website focused on services, storytelling, and donation functionality.",
-    image: "/images/web3.png",
-    link: "https://hospital-ruby.vercel.app/",
-    tags: ["Next.js", "UI/UX", "Animations", "Vercel"],
-  },
-];
+const filters = ["All projects", ...categories] as const;
+type Filter = (typeof filters)[number];
 
-export default function Projects() {
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
+const categoryIcons = {
+  Ecommerce: FiShoppingBag,
+  "Real estate": FiHome,
+  Healthcare: FiActivity,
+  "Brand & content": FiLayers,
+};
 
-  const scrollByCard = (dir: "left" | "right") => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    // Find the first card width (including gap) to scroll by one item
-    const firstCard = el.querySelector<HTMLElement>("[data-card='project']");
-    const cardWidth = firstCard ? firstCard.offsetWidth : 360;
-
-    const gap = 16; // should match `gap-4` (≈16px)
-    const delta = (cardWidth + gap) * (dir === "left" ? -1 : 1);
-
-    el.scrollBy({ left: delta, behavior: "smooth" });
-  };
-
-  // Subtle fade edges using Tailwind gradients
-  const edgeFade = useMemo(
-    () => ({
-      left:
-        "pointer-events-none absolute left-0 top-0 h-full w-12 md:w-20 bg-gradient-to-r from-gray-900 to-transparent",
-      right:
-        "pointer-events-none absolute right-0 top-0 h-full w-12 md:w-20 bg-gradient-to-l from-gray-900 to-transparent",
-    }),
-    []
-  );
+function ProjectArt({ project, featured }: { project: Project; featured: boolean }) {
+  const Icon = project.status === "In development" ? FiBriefcase : categoryIcons[project.category];
 
   return (
-    <section id="projects" className="py-20 bg-gray-900 text-white overflow-hidden">
-      <div className="max-w-6xl mx-auto px-6 md:px-10">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <div className="flex items-end justify-between gap-4 mb-8">
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Featured <span className="text-cyan-400">Projects</span>
-            </h2>
-
-            {/* Desktop controls */}
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                onClick={() => scrollByCard("left")}
-                className="h-10 w-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition grid place-items-center"
-                aria-label="Scroll left"
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => scrollByCard("right")}
-                className="h-10 w-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition grid place-items-center"
-                aria-label="Scroll right"
-              >
-                ›
-              </button>
-            </div>
+    <div className={project.image ? "project-art has-image" : "project-art"} aria-hidden="true">
+      {project.image ? (
+        <div className="project-window">
+          <span className="window-bar"><i /><i /><i /></span>
+          <div className="window-image">
+            <Image src={project.image} alt="" fill sizes={featured ? "(max-width: 600px) 90vw, 540px" : "(max-width: 600px) 90vw, 350px"} />
           </div>
+        </div>
+      ) : <span className="project-symbol"><Icon /></span>}
+    </div>
+  );
+}
 
-          <div className="relative">
-            <div className={edgeFade.left} />
-            <div className={edgeFade.right} />
+export default function Projects() {
+  const [filter, setFilter] = useState<Filter>("All projects");
+  const [selected, setSelected] = useState<Project | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const visible = filter === "All projects" ? projects : projects.filter((project) => project.category === filter);
 
-            {/* Horizontal scroller */}
-            <div
-              ref={scrollerRef}
-              className="
-                no-scrollbar
-                flex gap-4 md:gap-5
-                overflow-x-auto overflow-y-hidden
-                scroll-smooth
-                snap-x snap-mandatory
-                pb-4
-                [-ms-overflow-style:none] [scrollbar-width:none]
-              "
-              style={{
-                WebkitOverflowScrolling: "touch",
-              }}
-            >
-              
+  useLayoutEffect(() => {
+    if (selected) dialog.current?.showModal();
+  }, [selected]);
 
-              {projects.map((project, idx) => (
-                <motion.article
-                  key={project.title}
-                  data-card="project"
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
-                  transition={{ duration: 0.45, delay: idx * 0.05, ease: "easeOut" }}
-                  className="
-                    snap-start
-                    min-w-[84%] sm:min-w-[70%] md:min-w-[420px]
-                    bg-gray-800/70 backdrop-blur
-                    border border-white/10
-                    rounded-2xl overflow-hidden
-                    shadow-lg shadow-black/30
-                    hover:shadow-cyan-500/15
-                    transition
-                  "
-                >
-                  <a href={project.link} target="_blank" rel="noopener noreferrer">
-                    <div className="relative h-56 md:h-64">
-                      <Image
-                        src={project.image}
-                        alt={project.title}
-                        fill
-                        className="object-contain"
-                        priority={idx === 0}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent" />
-
-                      {/* Top-right pill */}
-                      <div className="absolute top-4 right-4">
-                        <span className="text-xs px-3 py-1 rounded-full bg-cyan-500/60 text-white border border-cyan-400/20">
-                          View ↗
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="text-xl md:text-2xl font-semibold">
-                          {project.title}
-                        </h3>
-                      </div>
-
-                      <p className="text-gray-300 mt-3 leading-relaxed">
-                        {project.description}
-                      </p>
-
-                      {!!project.tags?.length && (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {project.tags.map((t) => (
-                            <span
-                              key={t}
-                              className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-200"
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </a>
-                </motion.article>
-              ))}
-
-              {/* End padding so last card can center nicely */}
-              <div className="min-w-[1px] md:min-w-[8px]" />
-            </div>
-
-            {/* Mobile controls */}
-            <div className="mt-3 flex md:hidden items-center justify-center gap-3">
-              <button
-                onClick={() => scrollByCard("left")}
-                className="h-11 w-11 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition grid place-items-center"
-                aria-label="Scroll left"
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => scrollByCard("right")}
-                className="h-11 w-11 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition grid place-items-center"
-                aria-label="Scroll right"
-              >
-                ›
-              </button>
-            </div>
-
-            <p className="mt-3 text-center text-sm text-gray-400">
-              Swipe horizontally (mobile) or use arrows (desktop).
-            </p>
+  return (
+    <section id="projects" className="shell section" aria-labelledby="projects-title">
+      <div className="section-heading project-heading">
+        <div>
+          <p className="eyebrow"><span className="spark" aria-hidden="true">✦</span> PORTFOLIO</p>
+          <h2 id="projects-title">Work in <em>the wild.</em></h2>
+        </div>
+        <div className="project-total">
+          <strong>{completedProjects}</strong>
+          <div>
+            <p>Projects completed</p>
+            <span>{projects.length - completedProjects} in development</span>
           </div>
-        </motion.div>
+        </div>
       </div>
+
+      <div className="project-controls">
+        <div className="segmented" role="group" aria-label="Filter projects">
+          {filters.map((item) => (
+            <button key={item} type="button" aria-pressed={filter === item} aria-controls="project-results"
+              onClick={() => setFilter(item)}>{item}</button>
+          ))}
+        </div>
+        <p className="result-count" role="status">{visible.length} projects</p>
+      </div>
+
+      <div id="project-results" className={filter === "All projects" ? "project-grid with-featured" : "project-grid"} key={filter}>
+        {visible.map((project, index) => (
+          <article className="project-card" data-tone={project.accent} key={project.id}>
+            <ProjectArt project={project} featured={filter === "All projects" && index < 2} />
+            <div className="project-info">
+              <p className="project-category">{project.category}{project.status && <span> · {project.status}</span>}</p>
+              <h3>{project.name}</h3>
+              <p className="project-summary">{project.summary}</p>
+              <button type="button" className="project-button" onClick={() => setSelected(project)}
+                aria-label={`Project details for ${project.name}`}>
+                Details <FiPlus aria-hidden="true" />
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <dialog ref={dialog} className="project-dialog" aria-labelledby="project-dialog-title"
+        onClose={() => setSelected(null)}
+        onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
+        <div className="dialog-content">
+          <button type="button" className="icon-button dialog-close" aria-label="Close project details"
+            onClick={() => dialog.current?.close()}><FiX /></button>
+          <p className="eyebrow">{selected?.category}{selected?.status && ` · ${selected.status}`}</p>
+          <h3 id="project-dialog-title">{selected?.name}</h3>
+          {selected?.client !== selected?.name && <p className="dialog-client">{selected?.client}</p>}
+          <p className="section-intro">{selected?.details}</p>
+          <div className="tags">{selected?.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+          {selected?.href && <a className="button button-primary" href={selected.href} target="_blank" rel="noreferrer">
+            Visit website <FiExternalLink aria-hidden="true" />
+          </a>}
+        </div>
+      </dialog>
     </section>
   );
 }
