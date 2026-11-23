@@ -13,10 +13,12 @@ Open [http://localhost:4173](http://localhost:4173). To run the production build
 
 ## Contact form configuration
 
-Set `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY` in the project's local `.env.local` to enable Web3Forms:
+Set `WEB3FORMS_ACCESS_KEY` in the project's local `.env.local` to enable Web3Forms:
 
 ```dotenv
-NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=your-web3forms-access-key
+WEB3FORMS_ACCESS_KEY=your-web3forms-access-key
 ```
 
 Set the same variable in your production host's build environment before deploying. For the included GitHub Pages workflow, add it as a repository Actions variable. Web3Forms sends enquiries to the inbox linked to the key, and the visitor's email becomes the reply-to address.
+
+The page passes the key to the browser because the form submits directly to Web3Forms. Visitors can see the access key in the submission request.

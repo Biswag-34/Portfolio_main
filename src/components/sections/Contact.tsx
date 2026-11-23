@@ -13,9 +13,8 @@ const topics = [
 
 const steps = ["Focus", "Your brief"];
 const initialBrief = { name: "", email: "", message: "" };
-const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY?.trim();
 
-export default function Contact() {
+export default function Contact({ accessKey }: { accessKey?: string }) {
   const [topic, setTopic] = useState<(typeof topics)[number]["label"]>("Web development");
   const [brief, setBrief] = useState(initialBrief);
   const [step, setStep] = useState(0);

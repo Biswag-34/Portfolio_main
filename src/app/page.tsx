@@ -15,7 +15,7 @@ export default function HomePage() {
       <About />
       <Skills />
       <Education />
-      <Contact />
+      <Contact accessKey={process.env.WEB3FORMS_ACCESS_KEY?.trim()} />
     </main>
   );
 }
